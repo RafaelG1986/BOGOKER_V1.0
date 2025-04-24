@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Análisis{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Panel de Análisis</h1>
+    
+    <div class="row">
+        <!-- Gráfico de leads por mes -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Leads por mes (últimos 12 meses)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="leadsMonthChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de tipos de propiedad -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Tipos de propiedad</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="propertyTypeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Gráfico de leads por origen -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Leads por origen</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="leadSourceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabla de valores promedio por ciudad -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Valor promedio por ciudad</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ciudad</th>
+                                    <th>Valor Promedio</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in data.valores_promedio %}
+                                <tr>
+                                    <td>{{ item.ciudad }}</td>
+                                    <td>{{ '{:,.0f}'.format(item.promedio) }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script>
+    // Datos para los gráficos
+    const leadsMonthData = {
+        labels: [{% for item in data.leads_por_mes %}'{{ item.mes }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Leads',
+            data: [{% for item in data.leads_por_mes %}{{ item.cantidad }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+    
+    const propertyTypeData = {
+        labels: [{% for item in data.tipos_propiedad %}'{{ item.tipo }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Cantidad',
+            data: [{% for item in data.tipos_propiedad %}{{ item.cantidad }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    const leadSourceData = {
+        labels: [{% for item in data.leads_por_origen %}'{{ item.origen }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Cantidad',
+            data: [{% for item in data.leads_por_origen %}{{ item.cantidad }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    // Crear gráficos
+    window.onload = function() {
+        // Leads por mes
+        const ctxMonth = document.getElementById('leadsMonthChart').getContext('2d');
+        new Chart(ctxMonth, {
+            type: 'bar',
+            data: leadsMonthData,
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+        
+        // Tipos de propiedad
+        const ctxType = document.getElementById('propertyTypeChart').getContext('2d');
+        new Chart(ctxType, {
+            type: 'pie',
+            data: propertyTypeData,
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'right',
+                }
+            }
+        });
+        
+        // Leads por origen
+        const ctxSource = document.getElementById('leadSourceChart').getContext('2d');
+        new Chart(ctxSource, {
+            type: 'doughnut',
+            data: leadSourceData,
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'right',
+                }
+            }
+        });
+    };
+</script>
+{% endblock %}

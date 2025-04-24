@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nuevo Lead{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Crear Nuevo Lead</h1>
+        <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" id="createLeadForm">
+                <!-- Formulario dividido en secciones -->
+                <div class="row">
+                    <!-- Datos de Ubicación -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Ubicación</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="ciudad">Ciudad *</label>
+                                    <input type="text" class="form-control" id="ciudad" name="ciudad" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="zona">Zona/Barrio</label>
+                                    <input type="text" class="form-control" id="zona" name="zona">
+                                </div>
+                                <div class="form-group">
+                                    <label for="departamento">Departamento *</label>
+                                    <select class="form-control" id="departamento" name="departamento" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Bogotá D.C.">Bogotá D.C.</option>
+                                        <option value="Antioquia">Antioquia</option>
+                                        <option value="Valle del Cauca">Valle del Cauca</option>
+                                        <option value="Cundinamarca">Cundinamarca</option>
+                                        <option value="Atlántico">Atlántico</option>
+                                        <option value="Santander">Santander</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pais">País</label>
+                                    <input type="text" class="form-control" id="pais" name="pais" value="Colombia">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Datos de Propiedad -->
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-home"></i> Datos de la Propiedad</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="tipo_propiedad">Tipo de Propiedad *</label>
+                                    <select class="form-control" id="tipo_propiedad" name="tipo_propiedad" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Casa">Casa</option>
+                                        <option value="Apartamento">Apartamento</option>
+                                        <option value="Local Comercial">Local Comercial</option>
+                                        <option value="Oficina">Oficina</option>
+                                        <option value="Lote">Lote</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="condicion">Condición *</label>
+                                    <select class="form-control" id="condicion" name="condicion" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Nueva">Nueva</option>
+                                        <option value="Usada - Excelente estado">Usada - Excelente estado</option>
+                                        <option value="Usada - Buen estado">Usada - Buen estado</option>
+                                        <option value="Usada - Necesita remodelación">Usada - Necesita remodelación</option>
+                                        <option value="En construcción">En construcción</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="direccion">Dirección *</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="valor">Valor *</label>
+                                    <input type="text" class="form-control" id="valor" name="valor" placeholder="Ej: 250.000.000" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Datos de Contacto -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-user"></i> Datos de Contacto</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="apellido">Apellido *</label>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="identificacion">Identificación</label>
+                                    <input type="text" class="form-control" id="identificacion" name="identificacion">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Correo Electrónico *</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefono">Teléfono Fijo</label>
+                                    <input type="text" class="form-control" id="telefono" name="telefono">
+                                </div>
+                                <div class="form-group">
+                                    <label for="celular">Celular *</label>
+                                    <input type="text" class="form-control" id="celular" name="celular" required>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="whatsapp" name="whatsapp">
+                                    <label class="form-check-label" for="whatsapp">Tiene WhatsApp</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información Adicional -->
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información Adicional</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="origen">Origen *</label>
+                                    <select class="form-control" id="origen" name="origen" required>
+                                        <option value="Web" selected>Web</option>
+                                        <option value="Llamada">Llamada</option>
+                                        <option value="WhatsApp">WhatsApp</option>
+                                        <option value="Redes Sociales">Redes Sociales</option>
+                                        <option value="Referido">Referido</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> Los campos marcados con * son obligatorios.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Guardar Lead
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Validación del formulario
+        $('#createLeadForm').submit(function(e) {
+            var valid = true;
+            // Validación personalizada aquí si es necesario
+            return valid;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Búsqueda Avanzada{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-search"></i> Búsqueda Avanzada de Leads</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('main.search_leads') }}" method="GET" class="mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="q">Buscar por nombre, correo o teléfono:</label>
+                            <input type="text" class="form-control" id="q" name="q" placeholder="Ingrese texto a buscar">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="tipo">Tipo de propiedad:</label>
+                            <select class="form-control" id="tipo" name="tipo">
+                                <option value="">Todos</option>
+                                <option value="Casa">Casa</option>
+                                <option value="Apartamento">Apartamento</option>
+                                <option value="Local Comercial">Local Comercial</option>
+                                <option value="Oficina">Oficina</option>
+                                <option value="Lote">Lote</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="ciudad">Ciudad:</label>
+                            <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ej: Bogotá">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="min_valor">Valor mínimo:</label>
+                            <input type="text" class="form-control" id="min_valor" name="min_valor" placeholder="Ej: 100000000">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="max_valor">Valor máximo:</label>
+                            <input type="text" class="form-control" id="max_valor" name="max_valor" placeholder="Ej: 500000000">
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Ver todos
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

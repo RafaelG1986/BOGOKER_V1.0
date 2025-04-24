@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Bogoker{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Leads Inmobiliarios</h3>
+        <a href="{{ url_for('main.export_excel') }}" class="btn btn-success">
+            <i class="bi bi-file-excel"></i> Exportar a Excel
+        </a>
+    </div>
+    <div class="card-body">
+
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase">Total Leads</h6>
+                                <h1 class="display-4">{{ total_leads }}</h1>
+                            </div>
+                            <i class="bi bi-people-fill display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase">Leads Activos</h6>
+                                <h1 class="display-4">{{ leads_activos }}</h1>
+                            </div>
+                            <i class="bi bi-check2-circle display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase">Hoy</h6>
+                                <h1 class="display-4">{{ leads_hoy }}</h1>
+                            </div>
+                            <i class="bi bi-calendar-day display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase">Esta Semana</h6>
+                                <h1 class="display-4">{{ leads_semana }}</h1>
+                            </div>
+                            <i class="bi bi-calendar-week display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table id="leads-table" class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Nombre</th>
+                    <th>Contacto</th>
+                    <th>Tipo</th>
+                    <th>Condición</th>
+                    <th>Valor</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td>{{ lead.id_lead }}</td>
+                    <td>{{ lead.fecha_creacion }}</td>
+                    <td>{{ lead.nombre }} {{ lead.apellido }}</td>
+                    <td>
+                        <span data-bs-toggle="tooltip" title="{{ lead.correo }}">
+                            {{ lead.celular }}
+                        </span>
+                    </td>
+                    <td>{{ lead.tipo }}</td>
+                    <td>{{ lead.condicion }}</td>
+                    <td>${{ "{:,.0f}".format(lead.valor) if lead.valor else 0 }}</td>
+                    <td>{{ lead.ciudad }}, {{ lead.zona }}</td>
+                    <td>
+                        <span class="badge {% if lead.archivado %}bg-secondary{% else %}bg-success{% endif %}">
+                            {{ "Archivado" if lead.archivado else "Activo" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('main.lead_detail', lead_id=lead.id_lead) }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('main.edit_lead', lead_id=lead.id_lead) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            
+                            <!-- Conteo de comentarios si está disponible -->
+                            {% if lead.num_comentarios %}
+                            <span class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-chat-left-text"></i> {{ lead.num_comentarios }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#leads-table').DataTable();
+    });
+</script>
+{% endblock %}

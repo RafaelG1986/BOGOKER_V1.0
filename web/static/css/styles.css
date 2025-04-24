@@ -1,0 +1,63 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: none;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* Estilos para los comentarios */
+.comentarios .card {
+    border-left: 4px solid #007bff;
+}
+
+.comentarios .card-header {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+.comentarios .card-body {
+    padding: 0.75rem 1rem;
+}
+
+.comentarios small {
+    color: #6c757d;
+}
+
+/* Estilos para los gráficos y estadísticas */
+.display-4 {
+    font-size: 3rem;
+}
+
+canvas {
+    min-height: 250px;
+}
+
+@media (min-width: 768px) {
+    canvas {
+        min-height: 300px;
+    }
+}

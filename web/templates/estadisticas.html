@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas - Bogoker{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3>Dashboard de Estadísticas</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Tarjeta de total de leads -->
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total de Leads</h5>
+                <div class="display-4 fw-bold text-primary">{{ stats.total_leads }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de leads por mes -->
+    <div class="col-md-9 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Leads por Mes</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.leads_por_mes and stats.leads_por_mes|length > 0 %}
+                    <canvas id="leadsPorMesChart"></canvas>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-exclamation-circle fs-1"></i>
+                        <p class="mt-2">No hay datos disponibles para este período</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de origen de leads -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Leads por Origen</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="leadsPorOrigenChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de tipos de propiedad -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Tipos de Propiedad</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="tiposPropiedadChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de ubicaciones -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Top 10 Ciudades</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="ciudadesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de valores promedio -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Valor Promedio por Tipo</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="valoresPromedioChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Datos seguros con valores por defecto para evitar errores
+    var leadsPorMesLabels = [];
+    var leadsPorMesData = [];
+    var leadsPorOrigenLabels = [];
+    var leadsPorOrigenData = [];
+    var tiposPropiedadLabels = [];
+    var tiposPropiedadData = [];
+    var ciudadesLabels = [];
+    var ciudadesData = [];
+    var valoresPromedioLabels = [];
+    var valoresPromedioData = [];    
+   
+    // @ts-ignore
+    // eslint-disable-next-line
+    try {
+        // AGREGAR ESTE BLOQUE: Inicializar variables con datos del backend
+        {% if stats and stats.leads_por_mes %}
+            leadsPorMesLabels = {{ stats.leads_por_mes | map(attribute='mes') | list | tojson | safe }};
+            leadsPorMesData = {{ stats.leads_por_mes | map(attribute='cantidad') | list | tojson | safe }};
+        {% endif %}
+        
+        {% if stats and stats.leads_por_origen %}
+            leadsPorOrigenLabels = {{ stats.leads_por_origen | map(attribute='origen') | list | tojson | safe }};
+            leadsPorOrigenData = {{ stats.leads_por_origen | map(attribute='cantidad') | list | tojson | safe }};
+        {% endif %}
+        
+        {% if stats and stats.tipos_propiedad %}
+            tiposPropiedadLabels = {{ stats.tipos_propiedad | map(attribute='tipo') | list | tojson | safe }};
+            tiposPropiedadData = {{ stats.tipos_propiedad | map(attribute='cantidad') | list | tojson | safe }};
+        {% endif %}
+        
+        {% if stats and stats.leads_por_ciudad %}
+            ciudadesLabels = {{ stats.leads_por_ciudad | map(attribute='ciudad') | list | tojson | safe }};
+            ciudadesData = {{ stats.leads_por_ciudad | map(attribute='cantidad') | list | tojson | safe }};
+        {% endif %}
+        
+        {% if stats and stats.valor_promedio %}
+            valoresPromedioLabels = {{ stats.valor_promedio | map(attribute='tipo') | list | tojson | safe }};
+            valoresPromedioData = {{ stats.valor_promedio | map(attribute='promedio') | list | tojson | safe }};
+        {% endif %}
+    } catch (error) {
+        console.error("Error al cargar datos:", error);
+    }
+    // eslint-enable
+    // @ts-check
+   
+    document.addEventListener('DOMContentLoaded', function() {
+        // Colores para los gráficos
+        var backgroundColors = [
+            'rgba(54, 162, 235, 0.5)',
+            'rgba(255, 99, 132, 0.5)',
+            'rgba(255, 206, 86, 0.5)',
+            'rgba(75, 192, 192, 0.5)',
+            'rgba(153, 102, 255, 0.5)',
+            'rgba(255, 159, 64, 0.5)',
+            'rgba(199, 199, 199, 0.5)',
+            'rgba(83, 102, 255, 0.5)',
+            'rgba(40, 159, 64, 0.5)',
+            'rgba(210, 199, 199, 0.5)'
+        ];
+        
+        // Crear gráfico de Leads por Mes
+        var mesChart = document.getElementById('leadsPorMesChart');
+        if (mesChart && leadsPorMesLabels.length > 0) {
+            new Chart(mesChart, {
+                type: 'line',
+                data: {
+                    labels: leadsPorMesLabels,
+                    datasets: [{
+                        label: 'Leads por Mes',
+                        data: leadsPorMesData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Crear gráfico de Leads por Origen
+        var origenChart = document.getElementById('leadsPorOrigenChart');
+        if (origenChart && leadsPorOrigenLabels.length > 0) {
+            new Chart(origenChart, {
+                type: 'pie',
+                data: {
+                    labels: leadsPorOrigenLabels,
+                    datasets: [{
+                        data: leadsPorOrigenData,
+                        backgroundColor: backgroundColors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Crear gráfico de Tipos de Propiedad
+        var tiposChart = document.getElementById('tiposPropiedadChart');
+        if (tiposChart && tiposPropiedadLabels.length > 0) {
+            new Chart(tiposChart, {
+                type: 'doughnut',
+                data: {
+                    labels: tiposPropiedadLabels,
+                    datasets: [{
+                        data: tiposPropiedadData,
+                        backgroundColor: backgroundColors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Crear gráfico de Ciudades
+        var ciudadesChart = document.getElementById('ciudadesChart');
+        if (ciudadesChart && ciudadesLabels.length > 0) {
+            new Chart(ciudadesChart, {
+                type: 'bar',
+                data: {
+                    labels: ciudadesLabels,
+                    datasets: [{
+                        label: 'Leads por Ciudad',
+                        data: ciudadesData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Crear gráfico de Valores Promedio
+        var valoresChart = document.getElementById('valoresPromedioChart');
+        if (valoresChart && valoresPromedioLabels.length > 0) {
+            new Chart(valoresChart, {
+                type: 'bar',
+                data: {
+                    labels: valoresPromedioLabels,
+                    datasets: [{
+                        label: 'Valor Promedio (COP)',
+                        data: valoresPromedioData,
+                        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString('es-CO');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

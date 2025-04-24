@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Leads Asignados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Leads Asignados</h1>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Contacto</th>
+                            <th>Propiedad</th>
+                            <th>Ciudad</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if leads %}
+                            {% for lead in leads %}
+                            <tr>
+                                <td>{{ lead.id_lead }}</td>
+                                <td>{{ lead.nombre }} {{ lead.apellido }}</td>
+                                <td>
+                                    {% if lead.celular %}
+                                        <span class="badge badge-info">{{ lead.celular }}</span>
+                                    {% endif %}
+                                    {% if lead.correo %}
+                                        <br><small>{{ lead.correo }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ lead.tipo }}</td>
+                                <td>{{ lead.ciudad }}</td>
+                                <td>{{ lead.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('main.view_lead', lead_id=lead.id_lead) }}" class="btn btn-sm btn-info" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                data-toggle="modal" 
+                                                data-target="#contactarModal" 
+                                                data-id="{{ lead.id_lead }}"
+                                                data-nombre="{{ lead.nombre }} {{ lead.apellido }}"
+                                                data-celular="{{ lead.celular }}"
+                                                title="Contactar">
+                                            <i class="fas fa-phone"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No tienes leads asignados</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para contactar -->
+<div class="modal fade" id="contactarModal" tabindex="-1" role="dialog" aria-labelledby="contactarModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="contactarModalLabel">Contactar Lead</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Contacto:</strong> <span id="nombreContacto"></span></p>
+                <p><strong>Celular:</strong> <span id="celularContacto"></span></p>
+                
+                <form id="formWhatsApp" method="POST">
+                    <div class="form-group">
+                        <label for="mensaje">Mensaje de WhatsApp:</label>
+                        <textarea class="form-control" id="mensaje" name="mensaje" rows="4" placeholder="Escriba su mensaje aquí..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formWhatsApp" class="btn btn-success">
+                    <i class="fab fa-whatsapp"></i> Enviar WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $('#contactarModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const id = button.data('id');
+        const nombre = button.data('nombre');
+        const celular = button.data('celular');
+        
+        const modal = $(this);
+        modal.find('#nombreContacto').text(nombre);
+        modal.find('#celularContacto').text(celular);
+        modal.find('#formWhatsApp').attr('action', '/leads/' + id + '/send-whatsapp');
+    });
+</script>
+{% endblock %}

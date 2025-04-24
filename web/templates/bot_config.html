@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración del Bot - Bogoker{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3>Configuración del Bot de Telegram</h3>
+                <div>
+                    <button id="btn-start-bot" class="btn btn-success me-2 {% if bot_status %}d-none{% endif %}">
+                        <i class="bi bi-play-fill"></i> Iniciar Bot
+                    </button>
+                    <button id="btn-stop-bot" class="btn btn-danger me-2 {% if not bot_status %}d-none{% endif %}">
+                        <i class="bi bi-stop-fill"></i> Detener Bot
+                    </button>
+                    <button id="btn-test-bot" class="btn btn-warning">
+                        <i class="bi bi-lightning-fill"></i> Probar Conexión
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="status-indicator mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="status-circle {% if bot_status %}bg-success{% else %}bg-danger{% endif %} me-3"></div>
+                        <div>
+                            <h5 class="mb-0">Estado: <span id="bot-status">{{ "Activo" if bot_status else "Inactivo" }}</span></h5>
+                            <small class="text-muted" id="last-update">Última actualización: {{ last_update }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" id="bot-config-form">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5>Configuración General</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="bot_token" class="form-label">Token del Bot</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="bot_token" name="bot_token" 
+                                                   value="{{ config.bot_token }}" required>
+                                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Token proporcionado por BotFather en Telegram</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="webhook_url" class="form-label">URL de Webhook</label>
+                                        <input type="text" class="form-control" id="webhook_url" name="webhook_url" 
+                                               value="{{ config.webhook_url }}" required>
+                                        <small class="form-text text-muted">URL pública a la que Telegram enviará las actualizaciones</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="update_interval" class="form-label">Intervalo de Actualización (segundos)</label>
+                                        <input type="number" class="form-control" id="update_interval" name="update_interval" 
+                                               value="{{ config.update_interval|default(60) }}" min="30" max="3600">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5>Mensajes Personalizados</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="welcome_message" class="form-label">Mensaje de Bienvenida</label>
+                                        <textarea class="form-control" id="welcome_message" name="welcome_message" rows="3">{{ config.welcome_message }}</textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="help_message" class="form-label">Mensaje de Ayuda</label>
+                                        <textarea class="form-control" id="help_message" name="help_message" rows="3">{{ config.help_message }}</textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="finish_message" class="form-label">Mensaje de Finalización</label>
+                                        <textarea class="form-control" id="finish_message" name="finish_message" rows="3">{{ config.finish_message }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5>Opciones Avanzadas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3 form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto_restart" name="auto_restart" 
+                                                       {% if config.auto_restart %}checked{% endif %}>
+                                                <label class="form-check-label" for="auto_restart">Reinicio Automático</label>
+                                                <small class="form-text text-muted d-block">Reiniciar automáticamente el bot si deja de responder</small>
+                                            </div>
+                                            
+                                            <div class="mb-3 form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="log_conversations" name="log_conversations" 
+                                                       {% if config.log_conversations %}checked{% endif %}>
+                                                <label class="form-check-label" for="log_conversations">Registrar Conversaciones</label>
+                                                <small class="form-text text-muted d-block">Guardar historial de conversaciones para análisis</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-3 form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="notify_new_leads" name="notify_new_leads" 
+                                                       {% if config.notify_new_leads %}checked{% endif %}>
+                                                <label class="form-check-label" for="notify_new_leads">Notificar Nuevos Leads</label>
+                                                <small class="form-text text-muted d-block">Enviar notificación cuando se captura un nuevo lead</small>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="notification_chat_id" class="form-label">Chat ID para Notificaciones</label>
+                                                <input type="text" class="form-control" id="notification_chat_id" name="notification_chat_id" 
+                                                       value="{{ config.notification_chat_id }}">
+                                                <small class="form-text text-muted">Chat ID donde se enviarán las notificaciones</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Configuración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5>Registro de Actividad</h5>
+            </div>
+            <div class="card-body">
+                <div class="log-container p-3 bg-dark text-light rounded" style="height: 300px; overflow-y: auto;">
+                    <pre id="bot-logs">{{ bot_logs|join('\n') }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Función mejorada para manejar peticiones AJAX
+    async function fetchWithErrorHandling(url, options = {}) {
+        try {
+            console.log(`Realizando petición a ${url}...`);
+            const response = await fetch(url, {
+                ...options,
+                // Asegurar que los errores HTTP también se capturen
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(options.headers || {})
+                }
+            });
+            
+            console.log(`Respuesta recibida con status: ${response.status}`);
+            
+            // Incluso si la respuesta no es OK (200-299), intentamos leer el JSON
+            const data = await response.json().catch(e => {
+                console.error("Error al parsear JSON:", e);
+                return { success: false, message: "Error en formato de respuesta" };
+            });
+            
+            if (!response.ok) {
+                throw new Error(data.message || `Error HTTP: ${response.status}`);
+            }
+            
+            return data;
+        } catch (error) {
+            console.error("Error en fetchWithErrorHandling:", error);
+            // Re-lanzar el error para manejarlo en la función que llama
+            throw error;
+        }
+    }
+    
+    // Función para iniciar el bot con mejor manejo de errores
+    async function startBot() {
+        const startBtn = document.getElementById('btn-start-bot');
+        const originalText = startBtn.innerHTML;
+        
+        try {
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...';
+            
+            console.log("Iniciando solicitud para arrancar el bot...");
+            const data = await fetchWithErrorHandling('/bot/start', {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                document.getElementById('bot-status').textContent = 'Activo';
+                document.querySelector('.status-circle').classList.remove('bg-danger');
+                document.querySelector('.status-circle').classList.add('bg-success');
+                document.getElementById('btn-start-bot').classList.add('d-none');
+                document.getElementById('btn-stop-bot').classList.remove('d-none');
+                
+                // Actualizar logs
+                document.getElementById('bot-logs').textContent += '\n' + data.message;
+            } else {
+                alert(`Error: ${data.message}`);
+                if (data.error_details) {
+                    console.error('Detalles:', data.error_details);
+                }
+            }
+        } catch (error) {
+            console.error("Error completo:", error);
+            alert(`Error de comunicación: ${error.message}. Verifica la consola para más detalles.`);
+        } finally {
+            startBtn.disabled = false;
+            startBtn.innerHTML = originalText;
+        }
+    }
+    
+    // Función para detener el bot con mejor manejo de errores
+    async function stopBot() {
+        const stopBtn = document.getElementById('btn-stop-bot');
+        const originalText = stopBtn.innerHTML;
+        
+        try {
+            stopBtn.disabled = true;
+            stopBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deteniendo...';
+            
+            console.log("Iniciando solicitud para detener el bot...");
+            const data = await fetchWithErrorHandling('/bot/stop', {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                document.getElementById('bot-status').textContent = 'Inactivo';
+                document.querySelector('.status-circle').classList.remove('bg-success');
+                document.querySelector('.status-circle').classList.add('bg-danger');
+                document.getElementById('btn-stop-bot').classList.add('d-none');
+                document.getElementById('btn-start-bot').classList.remove('d-none');
+                
+                // Actualizar logs
+                document.getElementById('bot-logs').textContent += '\n' + data.message;
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        } catch (error) {
+            console.error("Error completo:", error);
+            alert(`Error de comunicación: ${error.message}. Verifica la consola para más detalles.`);
+        } finally {
+            stopBtn.disabled = false;
+            stopBtn.innerHTML = originalText;
+        }
+    }
+    
+    // Asignar eventos a los botones cuando cargue el documento
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('btn-start-bot').addEventListener('click', startBot);
+        document.getElementById('btn-stop-bot').addEventListener('click', stopBot);
+        
+        // Asignar evento al botón de prueba
+        document.getElementById('btn-test-bot').addEventListener('click', async function() {
+            try {
+                const data = await fetchWithErrorHandling('/bot/test', {
+                    method: 'POST'
+                });
+                
+                if (data.success) {
+                    alert(`Conexión exitosa: ${data.message}`);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                alert(`Error de comunicación: ${error.message}`);
+            }
+        });
+
+        // Solución para errores de audio
+        const audioElements = document.querySelectorAll('audio');
+        
+        // Añadir manejador de errores para cada elemento de audio
+        audioElements.forEach(audio => {
+            audio.addEventListener('error', function(e) {
+                console.log('Error de audio:', e);
+            });
+            
+            // Asegurar que solo se reproduzca después de interacción del usuario
+            audio.load();
+        });
+        
+        // Si no hay elementos de audio pero estás usando Web Audio API
+        if (window.AudioContext || window.webkitAudioContext) {
+            // Crear contexto de audio solo después de interacción del usuario
+            document.body.addEventListener('click', function() {
+                if (!window.audioContext) {
+                    window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }, { once: true });
+        }
+    });
+
+    // Función para reproducir notificaciones de manera segura
+    function playNotificationSafely(audioElement) {
+        if (!audioElement) return;
+        
+        const playPromise = audioElement.play();
+        
+        // Manejar la promesa para evitar el error AbortError
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log('Error reproduciendo audio:', error);
+                // No intentar pausar el audio si hay error
+            });
+        }
+    }
+</script>
+<style>
+    .status-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+    
+    .log-container {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    .toggle-password {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

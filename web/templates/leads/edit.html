@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Lead{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Editar Lead #{{ lead.id_lead }}</h1>
+        <div>
+            <a href="{{ url_for('main.view_lead', lead_id=lead.id_lead) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Detalles
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" id="editLeadForm">
+                <!-- Campos ocultos para IDs -->
+                <input type="hidden" name="id_ubicacion" value="{{ lead.id_ubicacion }}">
+                <input type="hidden" name="id_propiedad" value="{{ lead.id_propiedad }}">
+                <input type="hidden" name="id_contacto" value="{{ lead.id_contacto }}">
+                
+                <!-- Formulario dividido en secciones -->
+                <div class="row">
+                    <!-- Datos de Ubicación -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Ubicación</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="ciudad">Ciudad *</label>
+                                    <input type="text" class="form-control" id="ciudad" name="ciudad" value="{{ lead.ciudad }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="zona">Zona/Barrio</label>
+                                    <input type="text" class="form-control" id="zona" name="zona" value="{{ lead.zona }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="departamento">Departamento *</label>
+                                    <select class="form-control" id="departamento" name="departamento" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Bogotá D.C." {% if lead.departamento == 'Bogotá D.C.' %}selected{% endif %}>Bogotá D.C.</option>
+                                        <option value="Antioquia" {% if lead.departamento == 'Antioquia' %}selected{% endif %}>Antioquia</option>
+                                        <option value="Valle del Cauca" {% if lead.departamento == 'Valle del Cauca' %}selected{% endif %}>Valle del Cauca</option>
+                                        <option value="Cundinamarca" {% if lead.departamento == 'Cundinamarca' %}selected{% endif %}>Cundinamarca</option>
+                                        <option value="Atlántico" {% if lead.departamento == 'Atlántico' %}selected{% endif %}>Atlántico</option>
+                                        <option value="Santander" {% if lead.departamento == 'Santander' %}selected{% endif %}>Santander</option>
+                                        <option value="Otro" {% if lead.departamento not in ['Bogotá D.C.', 'Antioquia', 'Valle del Cauca', 'Cundinamarca', 'Atlántico', 'Santander'] %}selected{% endif %}>Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pais">País</label>
+                                    <input type="text" class="form-control" id="pais" name="pais" value="{{ lead.pais }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Datos de Propiedad -->
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-home"></i> Datos de la Propiedad</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="tipo_propiedad">Tipo de Propiedad *</label>
+                                    <select class="form-control" id="tipo_propiedad" name="tipo_propiedad" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Casa" {% if lead.tipo == 'Casa' %}selected{% endif %}>Casa</option>
+                                        <option value="Apartamento" {% if lead.tipo == 'Apartamento' %}selected{% endif %}>Apartamento</option>
+                                        <option value="Local Comercial" {% if lead.tipo == 'Local Comercial' %}selected{% endif %}>Local Comercial</option>
+                                        <option value="Oficina" {% if lead.tipo == 'Oficina' %}selected{% endif %}>Oficina</option>
+                                        <option value="Lote" {% if lead.tipo == 'Lote' %}selected{% endif %}>Lote</option>
+                                        <option value="Otro" {% if lead.tipo not in ['Casa', 'Apartamento', 'Local Comercial', 'Oficina', 'Lote'] %}selected{% endif %}>Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="condicion">Condición *</label>
+                                    <select class="form-control" id="condicion" name="condicion" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Nueva" {% if lead.condicion == 'Nueva' %}selected{% endif %}>Nueva</option>
+                                        <option value="Usada - Excelente estado" {% if lead.condicion == 'Usada - Excelente estado' %}selected{% endif %}>Usada - Excelente estado</option>
+                                        <option value="Usada - Buen estado" {% if lead.condicion == 'Usada - Buen estado' %}selected{% endif %}>Usada - Buen estado</option>
+                                        <option value="Usada - Necesita remodelación" {% if lead.condicion == 'Usada - Necesita remodelación' %}selected{% endif %}>Usada - Necesita remodelación</option>
+                                        <option value="En construcción" {% if lead.condicion == 'En construcción' %}selected{% endif %}>En construcción</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="direccion">Dirección *</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ lead.direccion }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="valor">Valor *</label>
+                                    <input type="text" class="form-control" id="valor" name="valor" value="{{ lead.valor }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Datos de Contacto -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-user"></i> Datos de Contacto</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ lead.nombre }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="apellido">Apellido *</label>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" value="{{ lead.apellido }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="identificacion">Identificación</label>
+                                    <input type="text" class="form-control" id="identificacion" name="identificacion" value="{{ lead.numero_identificacion }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Correo Electrónico *</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ lead.correo }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefono">Teléfono Fijo</label>
+                                    <input type="text" class="form-control" id="telefono" name="telefono" value="{{ lead.telefono }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="celular">Celular *</label>
+                                    <input type="text" class="form-control" id="celular" name="celular" value="{{ lead.celular }}" required>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="whatsapp" name="whatsapp" {% if lead.whatsapp %}checked{% endif %}>
+                                    <label class="form-check-label" for="whatsapp">Tiene WhatsApp</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información Adicional -->
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información Adicional</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Origen</label>
+                                    <input type="text" class="form-control" value="{{ lead.origen }}" readonly>
+                                    <small class="form-text text-muted">El origen no se puede modificar.</small>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> Los campos marcados con * son obligatorios.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Validación del formulario
+        $('#editLeadForm').submit(function(e) {
+            var valid = true;
+            // Validación personalizada aquí si es necesario
+            return valid;
+        });
+    });
+</script>
+{% endblock %}

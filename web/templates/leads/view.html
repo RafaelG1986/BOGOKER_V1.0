@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Lead{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Detalles del Lead #{{ lead.id_lead }}</h1>
+        <div>
+            <a href="{{ url_for('main.edit_lead', lead_id=lead.id_lead) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+            <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Información del Lead -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información del Lead</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>ID:</th>
+                            <td>{{ lead.id_lead }}</td>
+                        </tr>
+                        <tr>
+                            <th>Origen:</th>
+                            <td>{{ lead.origen }}</td>
+                        </tr>
+                        <tr>
+                            <th>Fecha de Creación:</th>
+                            <td>{{ lead.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        {% if lead.chat_id %}
+                        <tr>
+                            <th>ID de Chat:</th>
+                            <td>{{ lead.chat_id }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Información de la Propiedad -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-home"></i> Datos de la Propiedad</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Tipo:</th>
+                            <td>{{ lead.tipo }}</td>
+                        </tr>
+                        <tr>
+                            <th>Condición:</th>
+                            <td>{{ lead.condicion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dirección:</th>
+                            <td>{{ lead.direccion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Valor:</th>
+                            <td>{{ lead.valor }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información de Contacto y Ubicación -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Datos de Contacto</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Nombre:</th>
+                            <td>{{ lead.nombre }} {{ lead.apellido }}</td>
+                        </tr>
+                        <tr>
+                            <th>Identificación:</th>
+                            <td>{{ lead.numero_identificacion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Correo:</th>
+                            <td>{{ lead.correo }}</td>
+                        </tr>
+                        <tr>
+                            <th>Teléfono Fijo:</th>
+                            <td>{{ lead.telefono }}</td>
+                        </tr>
+                        <tr>
+                            <th>Celular:</th>
+                            <td>{{ lead.celular }}</td>
+                        </tr>
+                        <tr>
+                            <th>WhatsApp:</th>
+                            <td>{% if lead.whatsapp %}Sí{% else %}No{% endif %}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Ubicación</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Ciudad:</th>
+                            <td>{{ lead.ciudad }}</td>
+                        </tr>
+                        <tr>
+                            <th>Zona/Barrio:</th>
+                            <td>{{ lead.zona }}</td>
+                        </tr>
+                        <tr>
+                            <th>Departamento:</th>
+                            <td>{{ lead.departamento }}</td>
+                        </tr>
+                        <tr>
+                            <th>País:</th>
+                            <td>{{ lead.pais }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este lead? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('main.delete_lead', lead_id=lead.id_lead) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
