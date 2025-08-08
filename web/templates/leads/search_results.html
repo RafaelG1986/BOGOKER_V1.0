@@ -5,7 +5,9 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Resultados de Búsqueda</h1>
+        <h1>Resultados de Búsqueda 
+            <span class="badge badge-primary">{{ total_results or leads|length }} resultado(s)</span>
+        </h1>
         <div>
             <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
@@ -30,7 +32,7 @@
                 
                 {% if filters.tipo %}
                 <div class="col-md-3">
-                    <strong>Tipo de propiedad:</strong> {{ filters.tipo }}
+                    <strong>Tipo:</strong> {{ filters.tipo }}
                 </div>
                 {% endif %}
                 
@@ -40,15 +42,69 @@
                 </div>
                 {% endif %}
                 
+                {% if filters.departamento %}
+                <div class="col-md-2">
+                    <strong>Departamento:</strong> {{ filters.departamento }}
+                </div>
+                {% endif %}
+                
+                {% if filters.zona %}
+                <div class="col-md-2">
+                    <strong>Zona:</strong> {{ filters.zona }}
+                </div>
+                {% endif %}
+                
                 {% if filters.min_valor %}
                 <div class="col-md-2">
-                    <strong>Valor mínimo:</strong> {{ filters.min_valor }}
+                    <strong>Valor mín:</strong> ${{ filters.min_valor }}
                 </div>
                 {% endif %}
                 
                 {% if filters.max_valor %}
                 <div class="col-md-2">
-                    <strong>Valor máximo:</strong> {{ filters.max_valor }}
+                    <strong>Valor máx:</strong> ${{ filters.max_valor }}
+                </div>
+                {% endif %}
+                
+                {% if filters.origen %}
+                <div class="col-md-2">
+                    <strong>Origen:</strong> {{ filters.origen }}
+                </div>
+                {% endif %}
+                
+                {% if filters.condicion %}
+                <div class="col-md-2">
+                    <strong>Condición:</strong> {{ filters.condicion }}
+                </div>
+                {% endif %}
+                
+                {% if filters.estado %}
+                <div class="col-md-2">
+                    <strong>Estado:</strong> {{ filters.estado }}
+                </div>
+                {% endif %}
+                
+                {% if filters.fecha_desde %}
+                <div class="col-md-2">
+                    <strong>Desde:</strong> {{ filters.fecha_desde }}
+                </div>
+                {% endif %}
+                
+                {% if filters.fecha_hasta %}
+                <div class="col-md-2">
+                    <strong>Hasta:</strong> {{ filters.fecha_hasta }}
+                </div>
+                {% endif %}
+                
+                {% if filters.whatsapp %}
+                <div class="col-md-2">
+                    <strong>WhatsApp:</strong> {{ 'Sí' if filters.whatsapp == 'si' else 'No' }}
+                </div>
+                {% endif %}
+                
+                {% if filters.archivado %}
+                <div class="col-md-2">
+                    <strong>Estado:</strong> {{ 'Archivados' if filters.archivado == 'si' else 'Activos' }}
                 </div>
                 {% endif %}
             </div>

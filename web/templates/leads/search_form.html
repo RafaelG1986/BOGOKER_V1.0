@@ -10,11 +10,21 @@
         </div>
         <div class="card-body">
             <form action="{{ url_for('main.search_leads') }}" method="GET" class="mb-4">
+                
+                <!-- Filtros Básicos -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3"><i class="fas fa-filter"></i> Filtros Básicos</h6>
+                    </div>
+                </div>
+                
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="q">Buscar por nombre, correo o teléfono:</label>
-                            <input type="text" class="form-control" id="q" name="q" placeholder="Ingrese texto a buscar">
+                            <label for="q">Buscar por nombre, correo, teléfono o dirección:</label>
+                            <input type="text" class="form-control" id="q" name="q" 
+                                   placeholder="Ingrese texto a buscar" 
+                                   value="{{ request.args.get('q', '') }}">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -22,46 +32,205 @@
                             <label for="tipo">Tipo de propiedad:</label>
                             <select class="form-control" id="tipo" name="tipo">
                                 <option value="">Todos</option>
-                                <option value="Casa">Casa</option>
-                                <option value="Apartamento">Apartamento</option>
-                                <option value="Local Comercial">Local Comercial</option>
-                                <option value="Oficina">Oficina</option>
-                                <option value="Lote">Lote</option>
-                                <option value="Otro">Otro</option>
+                                <option value="Casa" {{ 'selected' if request.args.get('tipo') == 'Casa' }}>Casa</option>
+                                <option value="Apartamento" {{ 'selected' if request.args.get('tipo') == 'Apartamento' }}>Apartamento</option>
+                                <option value="Local comercial" {{ 'selected' if request.args.get('tipo') == 'Local comercial' }}>Local comercial</option>
+                                <option value="Oficina" {{ 'selected' if request.args.get('tipo') == 'Oficina' }}>Oficina</option>
+                                <option value="Lote" {{ 'selected' if request.args.get('tipo') == 'Lote' }}>Lote</option>
+                                <option value="Bodega" {{ 'selected' if request.args.get('tipo') == 'Bodega' }}>Bodega</option>
+                                <option value="Otro" {{ 'selected' if request.args.get('tipo') == 'Otro' }}>Otro</option>
                             </select>
                         </div>
                     </div>
                 </div>
+
+                <!-- Filtros de Ubicación -->
                 <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3"><i class="fas fa-map-marker-alt"></i> Ubicación</h6>
+                    </div>
+                </div>
+                
+                <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="ciudad">Ciudad:</label>
-                            <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ej: Bogotá">
+                            <input type="text" class="form-control" id="ciudad" name="ciudad" 
+                                   placeholder="Ej: Bogotá" 
+                                   value="{{ request.args.get('ciudad', '') }}">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="min_valor">Valor mínimo:</label>
-                            <input type="text" class="form-control" id="min_valor" name="min_valor" placeholder="Ej: 100000000">
+                            <label for="departamento">Estado/Departamento:</label>
+                            <input type="text" class="form-control" id="departamento" name="departamento" 
+                                   placeholder="Ej: Cundinamarca" 
+                                   value="{{ request.args.get('departamento', '') }}">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="max_valor">Valor máximo:</label>
-                            <input type="text" class="form-control" id="max_valor" name="max_valor" placeholder="Ej: 500000000">
+                            <label for="zona">Zona/Localidad:</label>
+                            <input type="text" class="form-control" id="zona" name="zona" 
+                                   placeholder="Ej: Chapinero" 
+                                   value="{{ request.args.get('zona', '') }}">
                         </div>
                     </div>
                 </div>
+
+                <!-- Filtros de Valor -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3"><i class="fas fa-dollar-sign"></i> Rango de Valor</h6>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="min_valor">Valor mínimo:</label>
+                            <input type="text" class="form-control" id="min_valor" name="min_valor" 
+                                   placeholder="Ej: 100000000" 
+                                   value="{{ request.args.get('min_valor', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="max_valor">Valor máximo:</label>
+                            <input type="text" class="form-control" id="max_valor" name="max_valor" 
+                                   placeholder="Ej: 500000000" 
+                                   value="{{ request.args.get('max_valor', '') }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros Avanzados -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-cogs"></i> Filtros Avanzados
+                            <button type="button" class="btn btn-sm btn-outline-secondary ml-2" 
+                                    data-toggle="collapse" data-target="#advanced-filters">
+                                <i class="fas fa-chevron-down"></i> Mostrar/Ocultar
+                            </button>
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="collapse" id="advanced-filters">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="origen">Origen del Lead:</label>
+                                <select class="form-control" id="origen" name="origen">
+                                    <option value="">Todos</option>
+                                    <option value="Telegram Bot" {{ 'selected' if request.args.get('origen') == 'Telegram Bot' }}>Telegram Bot</option>
+                                    <option value="Web" {{ 'selected' if request.args.get('origen') == 'Web' }}>Web</option>
+                                    <option value="Manual" {{ 'selected' if request.args.get('origen') == 'Manual' }}>Manual</option>
+                                    <option value="Referido" {{ 'selected' if request.args.get('origen') == 'Referido' }}>Referido</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="condicion">Condición de la Propiedad:</label>
+                                <select class="form-control" id="condicion" name="condicion">
+                                    <option value="">Todas</option>
+                                    <option value="Excelente" {{ 'selected' if request.args.get('condicion') == 'Excelente' }}>Excelente</option>
+                                    <option value="Buena" {{ 'selected' if request.args.get('condicion') == 'Buena' }}>Buena</option>
+                                    <option value="Regular" {{ 'selected' if request.args.get('condicion') == 'Regular' }}>Regular</option>
+                                    <option value="Necesita reparaciones" {{ 'selected' if request.args.get('condicion') == 'Necesita reparaciones' }}>Necesita reparaciones</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="estado">Estado del Lead:</label>
+                                <select class="form-control" id="estado" name="estado">
+                                    <option value="">Todos</option>
+                                    <option value="Nuevo" {{ 'selected' if request.args.get('estado') == 'Nuevo' }}>Nuevo</option>
+                                    <option value="Contactado" {{ 'selected' if request.args.get('estado') == 'Contactado' }}>Contactado</option>
+                                    <option value="Interesado" {{ 'selected' if request.args.get('estado') == 'Interesado' }}>Interesado</option>
+                                    <option value="Cerrado" {{ 'selected' if request.args.get('estado') == 'Cerrado' }}>Cerrado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fecha_desde">Fecha desde:</label>
+                                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                                       value="{{ request.args.get('fecha_desde', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fecha_hasta">Fecha hasta:</label>
+                                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
+                                       value="{{ request.args.get('fecha_hasta', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="whatsapp">Tiene WhatsApp:</label>
+                                <select class="form-control" id="whatsapp" name="whatsapp">
+                                    <option value="">Todos</option>
+                                    <option value="si" {{ 'selected' if request.args.get('whatsapp') == 'si' }}>Sí</option>
+                                    <option value="no" {{ 'selected' if request.args.get('whatsapp') == 'no' }}>No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="archivado">Estado de Archivo:</label>
+                                <select class="form-control" id="archivado" name="archivado">
+                                    <option value="">Todos</option>
+                                    <option value="no" {{ 'selected' if request.args.get('archivado') == 'no' }}>Activos</option>
+                                    <option value="si" {{ 'selected' if request.args.get('archivado') == 'si' }}>Archivados</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Buscar
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search"></i> Buscar Leads
                     </button>
-                    <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary">
-                        <i class="fas fa-list"></i> Ver todos
+                    <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-list"></i> Ver Todos
                     </a>
+                    <button type="button" class="btn btn-outline-warning btn-lg" onclick="clearForm()">
+                        <i class="fas fa-eraser"></i> Limpiar Filtros
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+function clearForm() {
+    document.getElementById('q').value = '';
+    document.getElementById('tipo').selectedIndex = 0;
+    document.getElementById('ciudad').value = '';
+    document.getElementById('departamento').value = '';
+    document.getElementById('zona').value = '';
+    document.getElementById('min_valor').value = '';
+    document.getElementById('max_valor').value = '';
+    document.getElementById('origen').selectedIndex = 0;
+    document.getElementById('condicion').selectedIndex = 0;
+    document.getElementById('estado').selectedIndex = 0;
+    document.getElementById('fecha_desde').value = '';
+    document.getElementById('fecha_hasta').value = '';
+    document.getElementById('whatsapp').selectedIndex = 0;
+    document.getElementById('archivado').selectedIndex = 0;
+}
+</script>
 {% endblock %}

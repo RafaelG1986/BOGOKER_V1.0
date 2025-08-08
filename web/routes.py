@@ -1196,22 +1196,39 @@ def update_lead_status(lead_id):
         conn.close()
     return redirect(url_for('main.view_lead', lead_id=lead_id))
 
+@main.route('/leads/search-form')
+@login_required
+def search_form():
+    """Mostrar formulario de búsqueda avanzada"""
+    return render_template('leads/search_form.html')
+
 @main.route('/leads/search', methods=['GET'])
 @login_required
 def search_leads():
-    # Parámetros de búsqueda
+    # Parámetros de búsqueda básicos
     search_term = request.args.get('q', '')
     tipo = request.args.get('tipo', '')
     ciudad = request.args.get('ciudad', '')
+    departamento = request.args.get('departamento', '')
+    zona = request.args.get('zona', '')
     min_valor = request.args.get('min_valor', '')
     max_valor = request.args.get('max_valor', '')
     
+    # Parámetros de filtrado avanzado
+    origen = request.args.get('origen', '')
+    condicion = request.args.get('condicion', '')
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    estado = request.args.get('estado', '')
+    whatsapp = request.args.get('whatsapp', '')
+    archivado = request.args.get('archivado', '')
+    
     # Construir consulta dinámica
     query = """
-    SELECT l.id_lead, l.fecha_creacion, l.origen,
-           c.nombre, c.apellido, c.celular, c.correo,
-           p.tipo, p.valor, 
-           u.ciudad
+    SELECT l.id_lead, l.fecha_creacion, l.origen, l.archivado, l.estado,
+           c.nombre, c.apellido, c.celular, c.correo, c.whatsapp,
+           p.tipo, p.valor, p.condicion, p.direccion,
+           u.ciudad, u.departamento, u.zona
     FROM leads l
     LEFT JOIN contactos c ON l.id_lead = c.id_lead
     LEFT JOIN propiedades p ON l.id_lead = p.id_lead
@@ -1220,36 +1237,91 @@ def search_leads():
     """
     params = []
     
+    # Filtros básicos
     if search_term:
-        query += " AND (c.nombre LIKE %s OR c.apellido LIKE %s OR c.celular LIKE %s OR c.correo LIKE %s)"
+        query += " AND (c.nombre LIKE %s OR c.apellido LIKE %s OR c.celular LIKE %s OR c.correo LIKE %s OR p.direccion LIKE %s)"
         term = f"%{search_term}%"
-        params.extend([term, term, term, term])
+        params.extend([term, term, term, term, term])
     
     if tipo:
         query += " AND p.tipo = %s"
         params.append(tipo)
     
     if ciudad:
-        query += " AND u.ciudad = %s"
-        params.append(ciudad)
+        query += " AND u.ciudad LIKE %s"
+        params.append(f"%{ciudad}%")
+    
+    if departamento:
+        query += " AND u.departamento LIKE %s"
+        params.append(f"%{departamento}%")
+        
+    if zona:
+        query += " AND u.zona LIKE %s"
+        params.append(f"%{zona}%")
     
     if min_valor:
-        query += " AND CAST(REPLACE(p.valor, '.', '') AS UNSIGNED) >= %s"
-        params.append(min_valor.replace('.', ''))
+        query += " AND CAST(REPLACE(REPLACE(p.valor, '.', ''), ',', '') AS UNSIGNED) >= %s"
+        params.append(min_valor.replace('.', '').replace(',', ''))
     
     if max_valor:
-        query += " AND CAST(REPLACE(p.valor, '.', '') AS UNSIGNED) <= %s"
-        params.append(max_valor.replace('.', ''))
+        query += " AND CAST(REPLACE(REPLACE(p.valor, '.', ''), ',', '') AS UNSIGNED) <= %s"
+        params.append(max_valor.replace('.', '').replace(',', ''))
+    
+    # Filtros avanzados
+    if origen:
+        query += " AND l.origen = %s"
+        params.append(origen)
+    
+    if condicion:
+        query += " AND p.condicion = %s"
+        params.append(condicion)
+    
+    if fecha_desde:
+        query += " AND DATE(l.fecha_creacion) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(l.fecha_creacion) <= %s"
+        params.append(fecha_hasta)
+    
+    if estado:
+        query += " AND l.estado = %s"
+        params.append(estado)
+    
+    if whatsapp == 'si':
+        query += " AND c.whatsapp = 1"
+    elif whatsapp == 'no':
+        query += " AND c.whatsapp = 0"
+    
+    if archivado == 'si':
+        query += " AND l.archivado = 1"
+    elif archivado == 'no':
+        query += " AND l.archivado = 0"
     
     query += " ORDER BY l.fecha_creacion DESC"
     
     # Ejecutar consulta
     conn = get_connection()
     leads = []
+    total_results = 0
+    
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query, params)
         leads = cursor.fetchall()
+        total_results = len(leads)
+        
+        # Formatear valores para mostrar
+        for lead in leads:
+            if lead['valor']:
+                try:
+                    valor_num = int(lead['valor'].replace('.', '').replace(',', ''))
+                    lead['valor_formatted'] = f"${valor_num:,}".replace(',', '.')
+                except:
+                    lead['valor_formatted'] = lead['valor']
+            else:
+                lead['valor_formatted'] = 'No especificado'
+                
     except Exception as e:
         flash(f'Error en la búsqueda: {str(e)}', 'error')
     finally:
@@ -1258,12 +1330,22 @@ def search_leads():
     return render_template(
         'leads/search_results.html', 
         leads=leads, 
+        total_results=total_results,
         search_term=search_term,
         filters={
             'tipo': tipo,
             'ciudad': ciudad,
+            'departamento': departamento,
+            'zona': zona,
             'min_valor': min_valor,
-            'max_valor': max_valor
+            'max_valor': max_valor,
+            'origen': origen,
+            'condicion': condicion,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'estado': estado,
+            'whatsapp': whatsapp,
+            'archivado': archivado
         }
     )
 
