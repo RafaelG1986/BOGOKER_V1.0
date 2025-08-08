@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, current_app, session
 from flask_login import login_required, current_user
 from database.db_connection import get_connection
 import pandas as pd
@@ -1115,11 +1115,37 @@ def edit_lead(lead_id):
                 conn.rollback()
             session['error'] = True
             flash(f'Error al actualizar lead: {str(e)}', 'error')
+            # Recargar datos del lead después del error
+            try:
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                query = """
+                SELECT 
+                    l.id_lead, l.fecha_creacion, l.origen, l.chat_id,
+                    c.id_contacto, c.nombre, c.apellido, c.numero_identificacion, c.correo, 
+                    c.telefono, c.celular, c.whatsapp,
+                    p.id_propiedad, p.tipo, p.condicion, p.direccion, p.valor,
+                    u.id_ubicacion, u.ciudad, u.zona, u.departamento, u.pais
+                FROM leads l
+                LEFT JOIN contactos c ON l.id_lead = c.id_lead
+                LEFT JOIN propiedades p ON l.id_lead = p.id_lead
+                LEFT JOIN ubicaciones u ON p.id_ubicacion = u.id_ubicacion
+                WHERE l.id_lead = %s
+                """
+                cursor.execute(query, (lead_id,))
+                lead = cursor.fetchone()
+            except:
+                lead = None
         finally:
             if conn:
                 conn.close()
             if 'error' in session:
                 session.pop('error')
+    
+    # Asegurar que lead esté definido antes de renderizar
+    if lead is None:
+        flash('Error al cargar datos del lead', 'error')
+        return redirect(url_for('main.list_leads'))
     
     return render_template('leads/edit.html', lead=lead)
 
