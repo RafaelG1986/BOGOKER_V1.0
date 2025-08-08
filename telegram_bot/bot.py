@@ -4,6 +4,7 @@ import logging
 import signal
 import mysql.connector
 from datetime import datetime
+import pytz
 
 try:
     import imghdr
@@ -19,12 +20,12 @@ except ImportError:
 
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
-    Updater,
+    Application,
     CommandHandler,
     MessageHandler,
     ConversationHandler,
     CallbackContext,
-    Filters,
+    filters,
 )
 
 # Importar configuración
@@ -93,7 +94,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-def start(update: Update, context: CallbackContext) -> int:
+async def start(update: Update, context: CallbackContext) -> int:
     """Inicia la conversación y solicita aceptación de política."""
     user = update.effective_user
     logger.info(f"Usuario {user.id} ({user.first_name}) inició una conversación")
@@ -103,20 +104,20 @@ def start(update: Update, context: CallbackContext) -> int:
     user_data_dict[user.id]["telegram_id"] = user.id
     user_data_dict[user.id]["telegram_username"] = user.username
     
-    update.message.reply_text(
+    await update.message.reply_text(
         f"{WELCOME_MESSAGE}\n\n"
         "Para comenzar, necesitamos que aceptes nuestra política de protección de datos personales.\n"
         "Escribe 'Acepto' para continuar."
     )
     return POLICY
 
-def policy(update: Update, context: CallbackContext) -> int:
+async def policy(update: Update, context: CallbackContext) -> int:
     """Procesa la respuesta de la política y solicita ubicación."""
     user = update.effective_user
     text = update.message.text
     
     if text.lower() != "acepto":
-        update.message.reply_text(
+        await update.message.reply_text(
             "Debes aceptar nuestra política de protección de datos para continuar.\n"
             "Escribe 'Acepto' para continuar o /cancel para salir."
         )
@@ -132,149 +133,151 @@ def policy(update: Update, context: CallbackContext) -> int:
     )
     return LOCATION_CITY
 
-def location_city(update: Update, context: CallbackContext) -> int:
+async def location_city(update: Update, context: CallbackContext) -> int:
     """Guarda la ciudad y solicita la zona."""
     user = update.effective_user
     user_data_dict[user.id]["ciudad"] = update.message.text
     
-    update.message.reply_text(
-        "¿En qué zona o barrio está ubicada la propiedad? (Si no lo sabes, escribe 'No sé')"
-    )
+    await update.message.reply_text("¿En qué zona de la ciudad te encuentras?")
     return LOCATION_ZONE
 
-def location_zone(update: Update, context: CallbackContext) -> int:
+async def location_zone(update: Update, context: CallbackContext) -> int:
     """Guarda la zona y solicita el departamento."""
     user = update.effective_user
     user_data_dict[user.id]["zona"] = update.message.text
     
-    update.message.reply_text(
-        "¿En qué departamento está ubicada la propiedad?",
-        reply_markup=ReplyKeyboardMarkup([
-            ["Bogotá D.C."], 
-            ["Antioquia"], 
-            ["Valle del Cauca"],
-            ["Otro"]
-        ], one_time_keyboard=True),
+    keyboard = [
+        ["Casa", "Apartamento"],
+        ["Local comercial", "Oficina"],
+        ["Lote", "Bodega"],
+        ["Otro"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    
+    await update.message.reply_text(
+        "¿Qué departamento o localidad?",
+        reply_markup=reply_markup
     )
     return LOCATION_DEPARTMENT
 
-def location_department(update: Update, context: CallbackContext) -> int:
+async def location_department(update: Update, context: CallbackContext) -> int:
     """Guarda el departamento y solicita dirección."""
     user = update.effective_user
     user_data_dict[user.id]["departamento"] = update.message.text
     user_data_dict[user.id]["pais"] = "Colombia"
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "Ahora necesitamos información sobre la propiedad.\n\n"
         "Por favor, ingresa la dirección de la propiedad:"
     )
     return PROPERTY_ADDRESS
 
-def property_address(update: Update, context: CallbackContext) -> int:
+async def property_address(update: Update, context: CallbackContext) -> int:
     """Guarda la dirección y solicita tipo de propiedad."""
     user = update.effective_user
     user_data_dict[user.id]["direccion"] = update.message.text
     
-    update.message.reply_text(
+    keyboard = [
+        ["Casa", "Apartamento"],
+        ["Local comercial", "Oficina"],
+        ["Lote", "Bodega"],
+        ["Otro"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    
+    await update.message.reply_text(
         "¿Qué tipo de propiedad es?",
-        reply_markup=ReplyKeyboardMarkup([
-            ["Casa"], 
-            ["Apartamento"], 
-            ["Local Comercial"],
-            ["Oficina"],
-            ["Lote"],
-            ["Otro"]
-        ], one_time_keyboard=True),
+        reply_markup=reply_markup
     )
     return PROPERTY_TYPE
 
-def property_type(update: Update, context: CallbackContext) -> int:
+async def property_type(update: Update, context: CallbackContext) -> int:
     """Guarda el tipo de propiedad y solicita condición."""
     user = update.effective_user
     user_data_dict[user.id]["tipo_propiedad"] = update.message.text
     
-    update.message.reply_text(
-        "¿En qué condición está la propiedad?",
-        reply_markup=ReplyKeyboardMarkup([
-            ["Nueva"], 
-            ["Usada - Excelente estado"], 
-            ["Usada - Buen estado"],
-            ["Usada - Necesita remodelación"],
-            ["En construcción"]
-        ], one_time_keyboard=True),
+    keyboard = [
+        ["Excelente", "Buena"],
+        ["Regular", "Necesita reparaciones"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    
+    await update.message.reply_text(
+        "¿En qué condición se encuentra la propiedad?",
+        reply_markup=reply_markup
     )
     return PROPERTY_CONDITION
 
-def property_condition(update: Update, context: CallbackContext) -> int:
+async def property_condition(update: Update, context: CallbackContext) -> int:
     """Guarda la condición y solicita valor."""
     user = update.effective_user
     user_data_dict[user.id]["condicion"] = update.message.text
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "¿Cuál es el valor aproximado de la propiedad? (en pesos colombianos)"
     )
     return PROPERTY_VALUE
 
-def property_value(update: Update, context: CallbackContext) -> int:
+async def property_value(update: Update, context: CallbackContext) -> int:
     """Guarda el valor y solicita información de contacto."""
     user = update.effective_user
     user_data_dict[user.id]["valor"] = update.message.text
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "¡Genial! Ahora necesitamos algunos datos personales para contactarte.\n\n"
         "¿Cuál es tu nombre?",
         reply_markup=ReplyKeyboardRemove()
     )
     return CONTACT_NAME
 
-def contact_name(update: Update, context: CallbackContext) -> int:
+async def contact_name(update: Update, context: CallbackContext) -> int:
     """Guarda el nombre y solicita apellido."""
     user = update.effective_user
     user_data_dict[user.id]["nombre"] = update.message.text
     
-    update.message.reply_text("¿Cuál es tu apellido?")
+    await update.message.reply_text("¿Cuál es tu apellido?")
     return CONTACT_LASTNAME
 
-def contact_lastname(update: Update, context: CallbackContext) -> int:
+async def contact_lastname(update: Update, context: CallbackContext) -> int:
     """Guarda el apellido y solicita número de identificación."""
     user = update.effective_user
     user_data_dict[user.id]["apellido"] = update.message.text
     
-    update.message.reply_text("¿Cuál es tu número de identificación? (cédula)")
+    await update.message.reply_text("¿Cuál es tu número de identificación?")
     return CONTACT_ID
 
-def contact_id(update: Update, context: CallbackContext) -> int:
+async def contact_id(update: Update, context: CallbackContext) -> int:
     """Guarda la identificación y solicita email."""
     user = update.effective_user
     user_data_dict[user.id]["identificacion"] = update.message.text
     
-    update.message.reply_text("¿Cuál es tu correo electrónico?")
+    await update.message.reply_text("¿Cuál es tu correo electrónico?")
     return CONTACT_EMAIL
 
-def contact_email(update: Update, context: CallbackContext) -> int:
+async def contact_email(update: Update, context: CallbackContext) -> int:
     """Guarda el email y solicita teléfono fijo."""
     user = update.effective_user
     user_data_dict[user.id]["email"] = update.message.text
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "¿Cuál es tu número de teléfono fijo? (Si no tienes, escribe 'No tengo')"
     )
     return CONTACT_PHONE
 
-def contact_phone(update: Update, context: CallbackContext) -> int:
+async def contact_phone(update: Update, context: CallbackContext) -> int:
     """Guarda el teléfono fijo y solicita celular."""
     user = update.effective_user
     user_data_dict[user.id]["telefono"] = update.message.text
     
-    update.message.reply_text("¿Cuál es tu número de celular?")
+    await update.message.reply_text("¿Cuál es tu número de celular?")
     return CONTACT_CELLPHONE
 
-def contact_cellphone(update: Update, context: CallbackContext) -> int:
+async def contact_cellphone(update: Update, context: CallbackContext) -> int:
     """Guarda el celular y solicita whatsapp."""
     user = update.effective_user
     user_data_dict[user.id]["celular"] = update.message.text
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "¿Tienes WhatsApp en este número? (Sí/No)",
         reply_markup=ReplyKeyboardMarkup([
             ["Sí"], 
@@ -283,7 +286,7 @@ def contact_cellphone(update: Update, context: CallbackContext) -> int:
     )
     return CONTACT_WHATSAPP
 
-def contact_whatsapp(update: Update, context: CallbackContext) -> int:
+async def contact_whatsapp(update: Update, context: CallbackContext) -> int:
     """Guarda si tiene whatsapp y finaliza la conversación."""
     user = update.effective_user
     user_data_dict[user.id]["whatsapp"] = update.message.text.lower() == "sí"
@@ -358,7 +361,7 @@ def contact_whatsapp(update: Update, context: CallbackContext) -> int:
             # Limpiar datos del usuario
             del user_data_dict[user.id]
             
-            update.message.reply_text(
+            await update.message.reply_text(
                 f"{FINISH_MESSAGE}\n\n"
                 "Hemos registrado tu información correctamente. Un asesor se pondrá en contacto contigo a la brevedad.\n\n"
                 "Si necesitas algo más, puedes escribir /start para comenzar una nueva consulta.",
@@ -379,7 +382,7 @@ def contact_whatsapp(update: Update, context: CallbackContext) -> int:
             except:
                 pass  # Asegurar que esto no cause otro error
             
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Lo sentimos, ha ocurrido un error al procesar tu información.\n"
                 "Por favor, intenta nuevamente más tarde o contacta directamente con nosotros.\n\n"
                 "Puedes escribir /start para comenzar una nueva consulta.",
@@ -389,7 +392,7 @@ def contact_whatsapp(update: Update, context: CallbackContext) -> int:
             conn.close()
     else:
         # Error de conexión a la BD
-        update.message.reply_text(
+        await update.message.reply_text(
             "Lo sentimos, no pudimos conectarnos a nuestra base de datos.\n"
             "Por favor, intenta nuevamente más tarde o contacta directamente con nosotros.\n\n"
             "Puedes escribir /start para comenzar una nueva consulta.",
@@ -398,7 +401,7 @@ def contact_whatsapp(update: Update, context: CallbackContext) -> int:
     
     return ConversationHandler.END
 
-def cancel(update: Update, context: CallbackContext) -> int:
+async def cancel(update: Update, context: CallbackContext) -> int:
     """Cancela la conversación."""
     user = update.effective_user
     
@@ -406,24 +409,24 @@ def cancel(update: Update, context: CallbackContext) -> int:
     if user.id in user_data_dict:
         del user_data_dict[user.id]
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "Has cancelado la operación. Si deseas comenzar de nuevo, escribe /start.",
         reply_markup=ReplyKeyboardRemove()
     )
     
     return ConversationHandler.END
 
-def help_command(update: Update, context: CallbackContext) -> None:
+async def help_command(update: Update, context: CallbackContext) -> None:
     """Envía un mensaje cuando se emite el comando /help."""
-    update.message.reply_text(HELP_MESSAGE)
+    await update.message.reply_text(HELP_MESSAGE)
 
-def echo(update: Update, context: CallbackContext) -> None:
+async def echo(update: Update, context: CallbackContext) -> None:
     """Echo para debugging."""
     # Guardar mensaje para debug
     with open('debug_log.txt', 'a', encoding='utf-8') as f:
         f.write(f"Mensaje recibido de {update.effective_user.id}: {update.message.text}\n")
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "Para comenzar una consulta, por favor escribe /start"
     )
 
@@ -437,45 +440,43 @@ def main():
     # Log de inicio
     logger.info(f"Bot iniciado con PID {os.getpid()}")
     
-    # Inicializar updater
-    updater = Updater(TELEGRAM_TOKEN)
-    dispatcher = updater.dispatcher
-    
+    # Crear la aplicación SIN JobQueue para evitar problemas de timezone en Windows
+    application = Application.builder().token(TELEGRAM_TOKEN).job_queue(None).build()
+
     # Añadir manejador de conversación
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            POLICY: [MessageHandler(Filters.text & ~Filters.command, policy)],
-            LOCATION_CITY: [MessageHandler(Filters.text & ~Filters.command, location_city)],
-            LOCATION_ZONE: [MessageHandler(Filters.text & ~Filters.command, location_zone)],
-            LOCATION_DEPARTMENT: [MessageHandler(Filters.text & ~Filters.command, location_department)],
-            PROPERTY_ADDRESS: [MessageHandler(Filters.text & ~Filters.command, property_address)],
-            PROPERTY_TYPE: [MessageHandler(Filters.text & ~Filters.command, property_type)],
-            PROPERTY_CONDITION: [MessageHandler(Filters.text & ~Filters.command, property_condition)],
-            PROPERTY_VALUE: [MessageHandler(Filters.text & ~Filters.command, property_value)],
-            CONTACT_NAME: [MessageHandler(Filters.text & ~Filters.command, contact_name)],
-            CONTACT_LASTNAME: [MessageHandler(Filters.text & ~Filters.command, contact_lastname)],
-            CONTACT_ID: [MessageHandler(Filters.text & ~Filters.command, contact_id)],
-            CONTACT_EMAIL: [MessageHandler(Filters.text & ~Filters.command, contact_email)],
-            CONTACT_PHONE: [MessageHandler(Filters.text & ~Filters.command, contact_phone)],
-            CONTACT_CELLPHONE: [MessageHandler(Filters.text & ~Filters.command, contact_cellphone)],
-            CONTACT_WHATSAPP: [MessageHandler(Filters.text & ~Filters.command, contact_whatsapp)],
+            POLICY: [MessageHandler(filters.TEXT & ~filters.COMMAND, policy)],
+            LOCATION_CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, location_city)],
+            LOCATION_ZONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, location_zone)],
+            LOCATION_DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, location_department)],
+            PROPERTY_ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_address)],
+            PROPERTY_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_type)],
+            PROPERTY_CONDITION: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_condition)],
+            PROPERTY_VALUE: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_value)],
+            CONTACT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_name)],
+            CONTACT_LASTNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_lastname)],
+            CONTACT_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_id)],
+            CONTACT_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_email)],
+            CONTACT_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_phone)],
+            CONTACT_CELLPHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_cellphone)],
+            CONTACT_WHATSAPP: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_whatsapp)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
     
-    dispatcher.add_handler(conv_handler)
+    application.add_handler(conv_handler)
     
     # Añadir otros manejadores
-    dispatcher.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("help", help_command))
     
     # Manejador por defecto
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     
-    # Iniciar el bot con timeout más alto para mayor estabilidad
-    updater.start_polling(drop_pending_updates=True, timeout=30)
+    # Iniciar el bot
     logger.info(f"Bot escuchando. Usa Ctrl+C para detener.")
-    updater.idle()
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
