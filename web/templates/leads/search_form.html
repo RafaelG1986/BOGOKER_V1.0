@@ -136,10 +136,11 @@
                                 <label for="condicion">Condición de la Propiedad:</label>
                                 <select class="form-control" id="condicion" name="condicion">
                                     <option value="">Todas</option>
-                                    <option value="Excelente" {{ 'selected' if request.args.get('condicion') == 'Excelente' }}>Excelente</option>
-                                    <option value="Buena" {{ 'selected' if request.args.get('condicion') == 'Buena' }}>Buena</option>
-                                    <option value="Regular" {{ 'selected' if request.args.get('condicion') == 'Regular' }}>Regular</option>
-                                    <option value="Necesita reparaciones" {{ 'selected' if request.args.get('condicion') == 'Necesita reparaciones' }}>Necesita reparaciones</option>
+                                    <option value="Nueva" {{ 'selected' if request.args.get('condicion') == 'Nueva' }}>Nueva</option>
+                                    <option value="Usada - Excelente estado" {{ 'selected' if request.args.get('condicion') == 'Usada - Excelente estado' }}>Usada - Excelente estado</option>
+                                    <option value="Usada - Buen estado" {{ 'selected' if request.args.get('condicion') == 'Usada - Buen estado' }}>Usada - Buen estado</option>
+                                    <option value="Usada - Necesita remodelación" {{ 'selected' if request.args.get('condicion') == 'Usada - Necesita remodelación' }}>Usada - Necesita remodelación</option>
+                                    <option value="En construcción" {{ 'selected' if request.args.get('condicion') == 'En construcción' }}>En construcción</option>
                                 </select>
                             </div>
                         </div>

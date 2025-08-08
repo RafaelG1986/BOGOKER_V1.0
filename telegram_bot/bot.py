@@ -52,12 +52,72 @@ logger = logging.getLogger(__name__)
 
 # Estados de la conversación
 POLICY, LOCATION_CITY, LOCATION_ZONE, LOCATION_DEPARTMENT, PROPERTY_ADDRESS = range(5)
-PROPERTY_TYPE, PROPERTY_CONDITION, PROPERTY_VALUE = range(5, 8)
-CONTACT_NAME, CONTACT_LASTNAME, CONTACT_ID, CONTACT_EMAIL = range(8, 12)
-CONTACT_PHONE, CONTACT_CELLPHONE, CONTACT_WHATSAPP = range(12, 15)
+PROPERTY_TYPE, PROPERTY_CONDITION, PROPERTY_VALUE, PROPERTY_VALUE_CONFIRM = range(5, 9)
+CONTACT_NAME, CONTACT_LASTNAME, CONTACT_ID, CONTACT_EMAIL = range(9, 13)
+CONTACT_PHONE, CONTACT_CELLPHONE, CONTACT_WHATSAPP = range(13, 16)
 
 # Almacenamiento de datos de usuario
 user_data_dict = {}
+
+# Función para procesar valores numéricos con puntos como separadores de miles
+def process_numeric_value(value_text):
+    """
+    Procesa un valor numérico que puede tener puntos como separadores de miles.
+    Retorna el valor limpio como string numérico o None si no es válido.
+    """
+    if not value_text:
+        return None
+    
+    # Remover espacios en blanco
+    clean_value = value_text.strip()
+    
+    # Remover puntos que actúan como separadores de miles
+    # Solo si hay puntos seguidos de exactamente 3 dígitos
+    import re
+    
+    # Patrón para detectar separadores de miles con puntos
+    # Ejemplo: 1.500.000 o 150.000
+    if re.match(r'^\d{1,3}(\.\d{3})*$', clean_value):
+        # Es un número con puntos como separadores de miles
+        numeric_value = clean_value.replace('.', '')
+        return numeric_value
+    
+    # Si no tiene puntos o tiene un formato diferente, verificar si es un número válido
+    elif clean_value.isdigit():
+        # Para números sin separadores, verificar si es muy pequeño y podría necesitar interpretación
+        num_value = int(clean_value)
+        
+        # Si el número es menor a 10,000 podría ser que el usuario quiso expresar miles o millones
+        # Por ejemplo: 500 podría ser 500.000 o 500.000.000
+        if num_value < 10000:
+            # Retornar el valor tal como está, pero agregar una nota para confirmación
+            return clean_value
+        else:
+            # Para números grandes sin separadores, asumir que están correctos
+            return clean_value
+    
+    # Si tiene comas como separador decimal (formato colombiano alternativo)
+    elif re.match(r'^\d{1,3}(\.\d{3})*,\d{1,2}$', clean_value):
+        # Ejemplo: 1.500.000,50
+        numeric_value = clean_value.replace('.', '').replace(',', '.')
+        return numeric_value
+    
+    return None
+
+def format_currency_display(value):
+    """
+    Formatea un valor numérico para mostrar con separadores de miles.
+    """
+    if not value:
+        return "0"
+    
+    try:
+        # Convertir a entero si es posible
+        num_value = int(float(str(value).replace('.', '').replace(',', '.')))
+        # Formatear con puntos como separadores de miles
+        return f"{num_value:,}".replace(',', '.')
+    except:
+        return str(value)
 
 # Función para obtener conexión a la base de datos
 def get_connection():
@@ -187,13 +247,14 @@ async def property_type(update: Update, context: CallbackContext) -> int:
     user_data_dict[user.id]["tipo_propiedad"] = update.message.text
     
     keyboard = [
-        ["Excelente", "Buena"],
-        ["Regular", "Necesita reparaciones"]
+        ["Nueva", "Usada - Excelente estado"],
+        ["Usada - Buen estado", "Usada - Necesita remodelación"],
+        ["En construcción"]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     
     await update.message.reply_text(
-        "¿En qué condición se encuentra la propiedad?",
+        "¿En qué condición se encuentra la propiedad que buscas?",
         reply_markup=reply_markup
     )
     return PROPERTY_CONDITION
@@ -204,21 +265,102 @@ async def property_condition(update: Update, context: CallbackContext) -> int:
     user_data_dict[user.id]["condicion"] = update.message.text
     
     await update.message.reply_text(
-        "¿Cuál es el valor aproximado de la propiedad? (en pesos colombianos)"
+        "¿Cuál es el valor aproximado de la propiedad que buscas?\n\n"
+        "⚠️ IMPORTANTE: Ingresa solo números, SIN puntos ni comas.\n"
+        "Ejemplos:\n"
+        "• Para 500 millones escribe: 500000000\n"
+        "• Para 250 millones escribe: 250000000\n"
+        "• Para 150 millones escribe: 150000000",
+        reply_markup=ReplyKeyboardRemove()
     )
     return PROPERTY_VALUE
 
 async def property_value(update: Update, context: CallbackContext) -> int:
     """Guarda el valor y solicita información de contacto."""
     user = update.effective_user
-    user_data_dict[user.id]["valor"] = update.message.text
+    value_text = update.message.text.strip()
     
-    await update.message.reply_text(
-        "¡Genial! Ahora necesitamos algunos datos personales para contactarte.\n\n"
-        "¿Cuál es tu nombre?",
-        reply_markup=ReplyKeyboardRemove()
-    )
+    # Verificar que solo contenga números
+    if not value_text.isdigit():
+        await update.message.reply_text(
+            "❌ Por favor, ingresa solo números, SIN puntos ni comas.\n\n"
+            "Ejemplos correctos:\n"
+            "• Para 500 millones: 500000000\n"
+            "• Para 250 millones: 250000000\n"
+            "• Para 150 millones: 150000000\n\n"
+            "Intenta nuevamente:"
+        )
+        return PROPERTY_VALUE
+    
+    # Guardar el valor tal como se ingresó
+    user_data_dict[user.id]["valor"] = value_text
+    
+    # Mostrar confirmación con formato legible
+    try:
+        num_value = int(value_text)
+        formatted_value = f"{num_value:,}".replace(',', '.')
+        
+        await update.message.reply_text(
+            f"✅ Perfecto! Valor registrado: ${formatted_value} COP\n\n"
+            "Ahora necesitamos algunos datos personales para contactarte.\n\n"
+            "¿Cuál es tu nombre?",
+            reply_markup=ReplyKeyboardRemove()
+        )
+    except:
+        await update.message.reply_text(
+            "✅ Valor registrado correctamente.\n\n"
+            "Ahora necesitamos algunos datos personales para contactarte.\n\n"
+            "¿Cuál es tu nombre?",
+            reply_markup=ReplyKeyboardRemove()
+        )
+    
     return CONTACT_NAME
+
+async def property_value_confirm(update: Update, context: CallbackContext) -> int:
+    """Confirma el valor seleccionado por el usuario."""
+    user = update.effective_user
+    choice = update.message.text.strip()
+    
+    # Verificar que el usuario tenga opciones guardadas
+    if "valor_opciones" not in user_data_dict[user.id]:
+        await update.message.reply_text(
+            "Ha ocurrido un error. Por favor, ingresa nuevamente el valor de la propiedad:"
+        )
+        return PROPERTY_VALUE
+    
+    opciones = user_data_dict[user.id]["valor_opciones"]
+    
+    # Validar la opción seleccionada
+    if choice in ["1", "2", "3"]:
+        valor_seleccionado = opciones[choice]
+        valor_original = opciones["original"]
+        
+        # Guardar el valor confirmado
+        user_data_dict[user.id]["valor"] = valor_seleccionado
+        user_data_dict[user.id]["valor_original"] = valor_original
+        
+        # Limpiar las opciones temporales
+        del user_data_dict[user.id]["valor_opciones"]
+        
+        # Mostrar confirmación
+        formatted_value = format_currency_display(valor_seleccionado)
+        
+        await update.message.reply_text(
+            f"¡Perfecto! Has confirmado un valor de ${formatted_value} COP.\n\n"
+            "Ahora necesitamos algunos datos personales para contactarte.\n\n"
+            "¿Cuál es tu nombre?",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return CONTACT_NAME
+    else:
+        # Opción inválida
+        await update.message.reply_text(
+            "Por favor, selecciona una opción válida (1, 2 o 3):\n\n"
+            f"1️⃣ ${format_currency_display(opciones['1'])} COP\n"
+            f"2️⃣ ${format_currency_display(opciones['2'])} COP\n"
+            f"3️⃣ ${format_currency_display(opciones['3'])} COP"
+        )
+        return PROPERTY_VALUE_CONFIRM
 
 async def contact_name(update: Update, context: CallbackContext) -> int:
     """Guarda el nombre y solicita apellido."""
@@ -445,6 +587,7 @@ def main():
             PROPERTY_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_type)],
             PROPERTY_CONDITION: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_condition)],
             PROPERTY_VALUE: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_value)],
+            PROPERTY_VALUE_CONFIRM: [MessageHandler(filters.TEXT & ~filters.COMMAND, property_value_confirm)],
             CONTACT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_name)],
             CONTACT_LASTNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_lastname)],
             CONTACT_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, contact_id)],

@@ -71,7 +71,7 @@
                         </tr>
                         <tr>
                             <th>Valor:</th>
-                            <td>{{ lead.valor }}</td>
+                            <td>${{ "{:,.0f}".format(lead.valor|float).replace(',', '.') if lead.valor else 0 }} COP</td>
                         </tr>
                     </table>
                 </div>
