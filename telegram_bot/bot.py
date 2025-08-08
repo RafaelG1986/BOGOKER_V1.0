@@ -126,7 +126,7 @@ async def policy(update: Update, context: CallbackContext) -> int:
     user_data_dict[user.id]["acepta_politica"] = True
     user_data_dict[user.id]["fecha_registro"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    update.message.reply_text(
+    await update.message.reply_text(
         "¡Gracias por aceptar nuestra política!\n\n"
         "Ahora, necesitamos algunos datos sobre la propiedad.\n"
         "¿En qué ciudad está ubicada la propiedad?"
@@ -136,9 +136,10 @@ async def policy(update: Update, context: CallbackContext) -> int:
 async def location_city(update: Update, context: CallbackContext) -> int:
     """Guarda la ciudad y solicita la zona."""
     user = update.effective_user
-    user_data_dict[user.id]["ciudad"] = update.message.text
+    ciudad = update.message.text
+    user_data_dict[user.id]["ciudad"] = ciudad
     
-    await update.message.reply_text("¿En qué zona de la ciudad te encuentras?")
+    await update.message.reply_text(f"¿En qué zona/localidad/ubicación de {ciudad} te encuentras?")
     return LOCATION_ZONE
 
 async def location_zone(update: Update, context: CallbackContext) -> int:
@@ -146,18 +147,7 @@ async def location_zone(update: Update, context: CallbackContext) -> int:
     user = update.effective_user
     user_data_dict[user.id]["zona"] = update.message.text
     
-    keyboard = [
-        ["Casa", "Apartamento"],
-        ["Local comercial", "Oficina"],
-        ["Lote", "Bodega"],
-        ["Otro"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    
-    await update.message.reply_text(
-        "¿Qué departamento o localidad?",
-        reply_markup=reply_markup
-    )
+    await update.message.reply_text("¿En qué estado/departamento te encuentras?")
     return LOCATION_DEPARTMENT
 
 async def location_department(update: Update, context: CallbackContext) -> int:

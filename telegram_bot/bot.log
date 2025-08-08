@@ -1,9 +1,13 @@
-[2025-08-08 15:10:29] Iniciando bot...
-Bot iniciado con PID: 10356
-2025-08-08 15:10:37,688 - __main__ - INFO - Bot iniciado con PID 10356
-2025-08-08 15:10:38,746 - __main__ - INFO - Bot escuchando. Usa Ctrl+C para detener.
-2025-08-08 15:10:41,322 - telegram.ext._application - INFO - Application started
-2025-08-08 15:10:44,321 - __main__ - INFO - Usuario 5253130749 (Rafael) inició una conversación
-C:\xampp\htdocs\BOGOKER_V1.0\BOGOKER_V1.0\telegram_bot\bot.py:129: RuntimeWarning: coroutine 'Message.reply_text' was never awaited
-  update.message.reply_text(
-RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+[2025-08-08 15:39:04] Iniciando bot...
+Bot iniciado con PID: 3740
+2025-08-08 15:39:08,883 - __main__ - INFO - Bot iniciado con PID 3740
+2025-08-08 15:39:09,719 - __main__ - INFO - Bot escuchando. Usa Ctrl+C para detener.
+2025-08-08 15:39:10,735 - telegram.ext._application - INFO - Application started
+2025-08-08 15:39:14,661 - __main__ - INFO - Usuario 5253130749 (Rafael) inició una conversación
+2025-08-08 15:42:05,495 - __main__ - INFO - Lead guardado con ID: 3
+2025-08-08 15:46:46,071 - __main__ - INFO - Usuario 5253130749 (Rafael) inició una conversación
+2025-08-08 15:49:06,068 - __main__ - INFO - Lead guardado con ID: 4
+2025-08-08 15:50:41,665 - __main__ - INFO - Bot iniciado con PID 18488
+2025-08-08 15:50:42,502 - __main__ - INFO - Bot escuchando. Usa Ctrl+C para detener.
+2025-08-08 15:50:44,267 - telegram.ext._application - INFO - Application started
+2025-08-08 15:50:58,723 - __main__ - INFO - Usuario 5253130749 (Rafael) inició una conversación
