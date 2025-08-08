@@ -146,13 +146,11 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="estado">Estado del Lead:</label>
-                                <select class="form-control" id="estado" name="estado">
+                                <label for="origen">Origen del lead:</label>
+                                <select class="form-control" id="origen" name="origen">
                                     <option value="">Todos</option>
-                                    <option value="Nuevo" {{ 'selected' if request.args.get('estado') == 'Nuevo' }}>Nuevo</option>
-                                    <option value="Contactado" {{ 'selected' if request.args.get('estado') == 'Contactado' }}>Contactado</option>
-                                    <option value="Interesado" {{ 'selected' if request.args.get('estado') == 'Interesado' }}>Interesado</option>
-                                    <option value="Cerrado" {{ 'selected' if request.args.get('estado') == 'Cerrado' }}>Cerrado</option>
+                                    <option value="Web" {{ 'selected' if request.args.get('origen') == 'Web' }}>Web</option>
+                                    <option value="Telegram Bot" {{ 'selected' if request.args.get('origen') == 'Telegram Bot' }}>Telegram Bot</option>
                                 </select>
                             </div>
                         </div>
@@ -207,6 +205,9 @@
                     <a href="{{ url_for('main.list_leads') }}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-list"></i> Ver Todos
                     </a>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
                     <button type="button" class="btn btn-outline-warning btn-lg" onclick="clearForm()">
                         <i class="fas fa-eraser"></i> Limpiar Filtros
                     </button>
@@ -227,7 +228,7 @@ function clearForm() {
     document.getElementById('max_valor').value = '';
     document.getElementById('origen').selectedIndex = 0;
     document.getElementById('condicion').selectedIndex = 0;
-    document.getElementById('estado').selectedIndex = 0;
+    // Campo 'estado' removido
     document.getElementById('fecha_desde').value = '';
     document.getElementById('fecha_hasta').value = '';
     document.getElementById('whatsapp').selectedIndex = 0;

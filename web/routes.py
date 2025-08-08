@@ -1245,13 +1245,12 @@ def search_leads():
     condicion = request.args.get('condicion', '')
     fecha_desde = request.args.get('fecha_desde', '')
     fecha_hasta = request.args.get('fecha_hasta', '')
-    estado = request.args.get('estado', '')
     whatsapp = request.args.get('whatsapp', '')
     archivado = request.args.get('archivado', '')
     
-    # Construir consulta dinámica
+    # Construir consulta dinámica (sin l.estado que no existe)
     query = """
-    SELECT l.id_lead, l.fecha_creacion, l.origen, l.archivado, l.estado,
+    SELECT l.id_lead, l.fecha_creacion, l.origen, l.archivado,
            c.nombre, c.apellido, c.celular, c.correo, c.whatsapp,
            p.tipo, p.valor, p.condicion, p.direccion,
            u.ciudad, u.departamento, u.zona
@@ -1310,9 +1309,7 @@ def search_leads():
         query += " AND DATE(l.fecha_creacion) <= %s"
         params.append(fecha_hasta)
     
-    if estado:
-        query += " AND l.estado = %s"
-        params.append(estado)
+    # Nota: Campo 'estado' removido porque no existe en la tabla leads
     
     if whatsapp == 'si':
         query += " AND c.whatsapp = 1"
@@ -1341,10 +1338,11 @@ def search_leads():
         for lead in leads:
             if lead['valor']:
                 try:
-                    valor_num = int(lead['valor'].replace('.', '').replace(',', ''))
+                    # El valor ya es decimal, no necesita replace
+                    valor_num = int(float(lead['valor']))
                     lead['valor_formatted'] = f"${valor_num:,}".replace(',', '.')
                 except:
-                    lead['valor_formatted'] = lead['valor']
+                    lead['valor_formatted'] = str(lead['valor'])
             else:
                 lead['valor_formatted'] = 'No especificado'
                 
@@ -1369,7 +1367,6 @@ def search_leads():
             'condicion': condicion,
             'fecha_desde': fecha_desde,
             'fecha_hasta': fecha_hasta,
-            'estado': estado,
             'whatsapp': whatsapp,
             'archivado': archivado
         }

@@ -25,3 +25,5 @@ Bot iniciado con PID: 3740
 2025-08-08 18:12:36,513 - __main__ - INFO - Bot iniciado con PID 22012
 2025-08-08 18:12:38,139 - __main__ - INFO - Bot escuchando. Usa Ctrl+C para detener.
 2025-08-08 18:12:39,905 - telegram.ext._application - INFO - Application started
+2025-08-08 18:14:06,307 - __main__ - INFO - Usuario 5253130749 (Rafael) inició una conversación
+2025-08-08 18:16:17,884 - __main__ - INFO - Lead guardado con ID: 12
